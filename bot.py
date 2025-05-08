@@ -1,76 +1,63 @@
 import discord
 from discord.ext import commands, tasks
 import os
-import asyncpraw  # Using asyncpraw instead of praw
+import praw
 
-# Replace with your actual values
-REDDIT_CLIENT_ID = 'your_client_id'
-REDDIT_SECRET = 'your_client_secret'
-REDDIT_USER_AGENT = 'track by /u/pin0bun PRAW/7.8.1 prawcore/2.4.0'
+# Reddit API details
+REDDIT_CLIENT_ID = os.environ['REDDIT_CLIENT_ID']
+REDDIT_CLIENT_SECRET = os.environ['REDDIT_CLIENT_SECRET']
 
-# Initialize the Reddit instance (AsyncPRAW)
-reddit = asyncpraw.Reddit(
+# ✅ directly set user agent here no env needed
+REDDIT_USER_AGENT = 'track bot by /u/pin0bun'
+
+# initialize Reddit instance
+reddit = praw.Reddit(
     client_id=REDDIT_CLIENT_ID,
-    client_secret=REDDIT_SECRET,
+    client_secret=REDDIT_CLIENT_SECRET,
     user_agent=REDDIT_USER_AGENT
 )
 
-# Discord Bot Token
+# Discord bot token
 TOKEN = os.environ['DISCORD_TOKEN']
 
-# Creating bot instance with proper intents
+# setup intents
 intents = discord.Intents.default()
-intents.message_content = True  # Enables reading message content (needed for some bots)
+intents.messages = True
+intents.guilds = True
 
+# create bot
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Subreddit names
 SUB1 = 'IndianTeenagers'
 SUB2 = 'TeenIndia'
 
-# Event triggered when bot is ready
 @bot.event
 async def on_ready():
     print(f'{bot.user} is online!')
-    update_gap.start()  # Start the loop to check every 30 mins
+    update_gap.start()
 
-# Loop that runs every 30 mins
 @tasks.loop(minutes=30)
 async def update_gap():
-    # Use asyncpraw to get subreddit data asynchronously
-    sub1 = await reddit.subreddit(SUB1)
-    sub2 = await reddit.subreddit(SUB2)
-
-    sub1_count = sub1.subscribers
-    sub2_count = sub2.subscribers
-
-    # Calculate the gap and estimate the days to surpass
-    gap = sub1_count - sub2_count
-    est_days = round(gap / 494, 1)  # avg growth rate (this number can be adjusted)
-
-    # Send update to the "track" channel
-    channel = discord.utils.get(bot.get_all_channels(), name='track')  # Channel name is "track"
-    if channel:
-        await channel.send(
-            f'Current members:\n{SUB1}: {sub1_count}\n{SUB2}: {sub2_count}\nGap: {gap}\nEstimated days to catch up: {est_days}'
-        )
-
-# Command to manually fetch the gap
-@bot.command()
-async def gap(ctx):
-    # Use asyncpraw to get subreddit data asynchronously
-    sub1 = await reddit.subreddit(SUB1)
-    sub2 = await reddit.subreddit(SUB2)
-
-    sub1_count = sub1.subscribers
-    sub2_count = sub2.subscribers
+    sub1_count = reddit.subreddit(SUB1).subscribers
+    sub2_count = reddit.subreddit(SUB2).subscribers
 
     gap = sub1_count - sub2_count
     est_days = round(gap / 494, 1)
 
+    channel = discord.utils.get(bot.get_all_channels(), name='track')
+    if channel:
+        await channel.send(
+            f'current members:\n{SUB1}: {sub1_count}\n{SUB2}: {sub2_count}\ngap: {gap}\nestimated days to catch up: {est_days}'
+        )
+
+@bot.command()
+async def gap(ctx):
+    sub1_count = reddit.subreddit(SUB1).subscribers
+    sub2_count = reddit.subreddit(SUB2).subscribers
+    gap = sub1_count - sub2_count
+    est_days = round(gap / 494, 1)
     await ctx.send(
-        f'{SUB1}: {sub1_count}\n{SUB2}: {sub2_count}\nGap: {gap}\nEstimated days to catch up: {est_days}'
+        f'{SUB1}: {sub1_count}\n{SUB2}: {sub2_count}\ngap: {gap}\nestimated days to catch up: {est_days}'
     )
 
-# Running the bot
 bot.run(TOKEN)
