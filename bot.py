@@ -3,14 +3,17 @@ from discord.ext import commands, tasks
 import os
 import praw
 
-# setting up intents
-intents = discord.Intents.default()
-intents.message_content = True  # allows reading messages (needed for commands)
+# Replace with your actual values
+REDDIT_CLIENT_ID = 'your_client_id'
+REDDIT_SECRET = 'your_client_secret'
+REDDIT_USER_AGENT = 'track by /u/pin0bun PRAW/7.8.1 prawcore/2.4.0'
 
-# Reddit API credentials
-REDDIT_CLIENT_ID = os.environ['REDDIT_CLIENT_ID']
-REDDIT_CLIENT_SECRET = os.environ['REDDIT_CLIENT_SECRET']
-REDDIT_USER_AGENT = os.environ['REDDIT_USER_AGENT']
+# Initialize the Reddit instance
+reddit = praw.Reddit(
+    client_id=REDDIT_CLIENT_ID,
+    client_secret=REDDIT_SECRET,
+    user_agent=REDDIT_USER_AGENT
+)
 
 # Discord Bot Token
 TOKEN = os.environ['DISCORD_TOKEN']
