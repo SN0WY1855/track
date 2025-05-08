@@ -18,15 +18,11 @@ reddit = praw.Reddit(
 # Discord Bot Token
 TOKEN = os.environ['DISCORD_TOKEN']
 
+# Define intents
+intents = discord.Intents.default()
+
 # Creating bot instance
 bot = commands.Bot(command_prefix='!', intents=intents)
-
-# Reddit API initialization
-reddit = praw.Reddit(
-    client_id=REDDIT_CLIENT_ID,
-    client_secret=REDDIT_CLIENT_SECRET,
-    user_agent=REDDIT_USER_AGENT
-)
 
 # Subreddit names
 SUB1 = 'IndianTeenagers'
