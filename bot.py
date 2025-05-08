@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 import os
-import praw
+import asyncpraw
 
 # Reddit API details
 REDDIT_CLIENT_ID = os.environ['REDDIT_CLIENT_ID']
@@ -10,8 +10,8 @@ REDDIT_CLIENT_SECRET = os.environ['REDDIT_CLIENT_SECRET']
 # ✅ directly set user agent here no env needed
 REDDIT_USER_AGENT = 'track bot by /u/pin0bun'
 
-# initialize Reddit instance
-reddit = praw.Reddit(
+# initialize Reddit instance (async)
+reddit = asyncpraw.Reddit(
     client_id=REDDIT_CLIENT_ID,
     client_secret=REDDIT_CLIENT_SECRET,
     user_agent=REDDIT_USER_AGENT
@@ -37,9 +37,11 @@ TRACK_CHANNELS = {
     1358724438878716015: 1370007666826674227,  # server 2
 }
 
-def get_gap_data():
-    sub1_count = reddit.subreddit(SUB1).subscribers
-    sub2_count = reddit.subreddit(SUB2).subscribers
+async def get_gap_data():
+    sub1 = await reddit.subreddit(SUB1)
+    sub2 = await reddit.subreddit(SUB2)
+    sub1_count = sub1.subscribers
+    sub2_count = sub2.subscribers
     gap = sub1_count - sub2_count
     est_days = round(gap / 494, 1)
     return sub1_count, sub2_count, gap, est_days
@@ -56,7 +58,7 @@ async def update_gap():
         channel = bot.get_channel(channel_id)
         if channel:
             try:
-                sub1_count, sub2_count, gap, est_days = get_gap_data()
+                sub1_count, sub2_count, gap, est_days = await get_gap_data()
                 await channel.send(
                     f'current members:\n{SUB1}: {sub1_count}\n{SUB2}: {sub2_count}\ngap: {gap}\nestimated days to catch up: {est_days}'
                 )
@@ -67,7 +69,7 @@ async def update_gap():
 
 @bot.command()
 async def gap(ctx):
-    sub1_count, sub2_count, gap, est_days = get_gap_data()
+    sub1_count, sub2_count, gap, est_days = await get_gap_data()
     await ctx.send(
         f'{SUB1}: {sub1_count}\n{SUB2}: {sub2_count}\ngap: {gap}\nestimated days to catch up: {est_days}'
     )
