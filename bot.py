@@ -40,6 +40,11 @@ TRACK_CHANNELS = {
 async def get_gap_data():
     sub1 = await reddit.subreddit(SUB1)
     sub2 = await reddit.subreddit(SUB2)
+    
+    # Load subreddits to access their attributes
+    await sub1.load()
+    await sub2.load()
+
     sub1_count = sub1.subscribers
     sub2_count = sub2.subscribers
     gap = sub1_count - sub2_count
