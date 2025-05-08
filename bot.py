@@ -2,15 +2,17 @@ import discord
 from discord.ext import commands, tasks
 import os
 import asyncpraw
+import logging
+
+# Set up logging
+logging.basicConfig(filename='bot.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Reddit API details
-REDDIT_CLIENT_ID = os.environ['REDDIT_CLIENT_ID']
-REDDIT_CLIENT_SECRET = os.environ['REDDIT_CLIENT_SECRET']
-
-# ✅ directly set user agent here no env needed
+REDDIT_CLIENT_ID = os.getenv('REDDIT_CLIENT_ID')
+REDDIT_CLIENT_SECRET = os.getenv('REDDIT_CLIENT_SECRET')
 REDDIT_USER_AGENT = 'track bot by /u/pin0bun'
 
-# initialize Reddit instance (async)
+# Initialize Reddit instance
 reddit = asyncpraw.Reddit(
     client_id=REDDIT_CLIENT_ID,
     client_secret=REDDIT_CLIENT_SECRET,
@@ -18,20 +20,20 @@ reddit = asyncpraw.Reddit(
 )
 
 # Discord bot token
-TOKEN = os.environ['DISCORD_TOKEN']
+TOKEN = os.getenv('DISCORD_TOKEN')
 
-# setup intents
+# Setup intents
 intents = discord.Intents.default()
 intents.messages = True
 intents.guilds = True
 
-# create bot
+# Create bot
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 SUB1 = 'IndianTeenagers'
 SUB2 = 'TeenIndia'
 
-# hardcoded server-channel map
+# Hardcoded server-channel map
 TRACK_CHANNELS = {
     1342622803035160646: 1369963139738898503,  # server 1
     1358724438878716015: 1370007666826674227,  # server 2
@@ -53,7 +55,7 @@ async def get_gap_data():
 
 @bot.event
 async def on_ready():
-    print(f'{bot.user} is online!')
+    logging.info(f'{bot.user} is online!')
     await bot.change_presence(activity=discord.Game(name='Tracking Sub Growth'))
     update_gap.start()
 
@@ -68,15 +70,19 @@ async def update_gap():
                     f'current members:\n{SUB1}: {sub1_count}\n{SUB2}: {sub2_count}\ngap: {gap}\nestimated days to catch up: {est_days}'
                 )
             except Exception as e:
-                print(f'update error in guild {guild_id}: {e}')
+                logging.error(f'update error in guild {guild_id}: {e}')
         else:
-            print(f'channel not found in guild {guild_id}')
+            logging.warning(f'channel not found in guild {guild_id}')
 
 @bot.command()
 async def gap(ctx):
-    sub1_count, sub2_count, gap, est_days = await get_gap_data()
-    await ctx.send(
-        f'{SUB1}: {sub1_count}\n{SUB2}: {sub2_count}\ngap: {gap}\nestimated days to catch up: {est_days}'
-    )
+    try:
+        sub1_count, sub2_count, gap, est_days = await get_gap_data()
+        await ctx.send(
+            f'{SUB1}: {sub1_count}\n{SUB2}: {sub2_count}\ngap: {gap}\nestimated days to catch up: {est_days}'
+        )
+    except Exception as e:
+        logging.error(f'Command error: {e}')
+        await ctx.send("An error occurred while fetching gap data.")
 
 bot.run(TOKEN)
