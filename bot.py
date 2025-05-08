@@ -30,7 +30,7 @@ async def update_gap():
     sub2_count = reddit.subreddit(SUB2).subscribers
     gap = sub1_count - sub2_count
     est_days = round(gap / 494, 1)
-    channel = discord.utils.get(bot.get_all_channels(), name='your-channel-name')
+    channel = discord.utils.get(bot.get_all_channels(), name='track')
     if channel:
         await channel.send(
             f'current members:\n{SUB1}: {sub1_count}\n{SUB2}: {sub2_count}\ngap: {gap}\nestimated days to catch up: {est_days}'
