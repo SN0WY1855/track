@@ -50,7 +50,7 @@ async def on_ready():
     await bot.change_presence(activity=discord.Game(name='Tracking Sub Growth'))
     update_gap.start()
 
-@tasks.loop(minutes=3)
+@tasks.loop(minutes=30)
 async def update_gap():
     for guild_id, channel_id in TRACK_CHANNELS.items():
         channel = bot.get_channel(channel_id)
