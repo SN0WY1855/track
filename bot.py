@@ -28,7 +28,7 @@ intents.guilds = True
 # create bot
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-SUB1 = 'IndianTeenagers'
+SUB1 = 'Btechtards'
 SUB2 = 'TeenIndia'
 
 # hardcoded server-channel map
